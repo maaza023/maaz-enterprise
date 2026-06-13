@@ -10,6 +10,7 @@ export default function LandingPage() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [user, setUser] = useState<any>(null);
   const [isContactModalOpen, setContactModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const slide = (direction: 'left' | 'right') => {
     if (sliderRef.current) {
@@ -90,48 +91,122 @@ export default function LandingPage() {
           </div>
 
           {/* Right Side: Action Buttons */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              type="button"
-              onClick={() => setContactModalOpen(true)}
-              className="hidden sm:inline-flex px-5 py-2.5 bg-[#1F302A] border border-[#F3EFE0]/20 text-[#F3EFE0] rounded-full hover:bg-white/10 transition-all text-sm font-medium"
-            >
-              Contact
-            </button>
-            <Link 
-              href={user ? "/book" : "/login"} 
-              className="px-4 sm:px-6 py-2 sm:py-2.5 bg-[#D48C70] text-[#1F302A] rounded-full hover:bg-[#E8B49B] transition-all text-xs sm:text-sm font-bold shadow-[0_0_15px_rgba(212,140,112,0.3)]"
-            >
-              <span className="hidden sm:inline">Book Free consultation</span>
-              <span className="sm:hidden">Book</span>
-            </Link>
-            {user ? (
-              <>
-                <Link
-                  href="/bookings"
-                  className="px-3 sm:px-4 py-2 rounded-full border border-white/20 text-[#F3EFE0] hover:bg-white/10 transition-colors text-xs sm:text-sm font-medium"
-                >
-                  <span className="hidden sm:inline">My Bookings</span>
-                  <span className="sm:hidden">Bookings</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="px-3 sm:px-4 py-2 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors text-xs sm:text-sm font-medium"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link 
-                href="/login" 
-                className="text-xs sm:text-sm font-medium text-[#F3EFE0]/70 hover:text-[#F3EFE0] transition-colors px-3 sm:px-4 py-2 border border-[#F3EFE0]/20 rounded-full hover:bg-white/5"
+          <div className="flex items-center">
+            {/* Desktop Navigation: Visible on md and up */}
+            <div className="hidden md:flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => setContactModalOpen(true)}
+                className="px-5 py-2.5 bg-[#1F302A] border border-[#F3EFE0]/20 text-[#F3EFE0] rounded-full hover:bg-white/10 transition-all text-sm font-medium"
               >
-                Sign in
+                Contact
+              </button>
+              <Link 
+                href={user ? "/book" : "/login"} 
+                className="px-6 py-2.5 bg-[#D48C70] text-[#1F302A] rounded-full hover:bg-[#E8B49B] transition-all text-sm font-bold shadow-[0_0_15px_rgba(212,140,112,0.3)]"
+              >
+                Book Free Consultation
               </Link>
-            )}
+              {user ? (
+                <>
+                  <Link
+                    href="/bookings"
+                    className="px-4 py-2 rounded-full border border-white/20 text-[#F3EFE0] hover:bg-white/10 transition-colors text-sm font-medium"
+                  >
+                    My Bookings
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="px-4 py-2 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors text-sm font-medium"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link 
+                  href="/login" 
+                  className="text-sm font-medium text-[#F3EFE0]/70 hover:text-[#F3EFE0] transition-colors px-4 py-2 border border-[#F3EFE0]/20 rounded-full hover:bg-white/5"
+                >
+                  Sign in
+                </Link>
+              )}
+            </div>
+
+            {/* Mobile Navigation Toggle: Hidden on md and up */}
+            <div className="md:hidden flex items-center">
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 text-[#F3EFE0] hover:text-[#D48C70] transition-colors text-2xl focus:outline-none"
+                aria-label="Toggle Menu"
+              >
+                ☰
+              </button>
+            </div>
           </div>
         </nav>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <>
+            {/* Invisible fixed full-screen overlay to close menu on click outside */}
+            <div 
+              className="fixed inset-0 z-40 md:hidden bg-transparent" 
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <div className="absolute top-24 left-6 right-6 z-50 md:hidden bg-[#1F302A] border border-[#F3EFE0]/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setContactModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full px-5 py-3 bg-white/5 border border-[#F3EFE0]/10 text-[#F3EFE0] rounded-xl hover:bg-white/10 transition-all text-center text-sm font-medium"
+              >
+                Contact
+              </button>
+              
+              <Link 
+                href={user ? "/book" : "/login"} 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="w-full px-5 py-3 bg-[#D48C70] text-[#1F302A] rounded-xl hover:bg-[#E8B49B] transition-all text-center text-sm font-bold block"
+              >
+                Book Free Consultation
+              </Link>
+              
+              {user ? (
+                <>
+                  <Link
+                    href="/bookings"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full px-5 py-3 rounded-xl border border-white/10 text-[#F3EFE0] hover:bg-white/10 transition-colors text-center text-sm font-medium block"
+                  >
+                    My Bookings
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full px-5 py-3 rounded-xl border border-white/10 text-white hover:bg-white/10 transition-colors text-center text-sm font-medium"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link 
+                  href="/login" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full text-center text-sm font-medium text-[#F3EFE0]/70 hover:text-[#F3EFE0] transition-colors px-5 py-3 border border-[#F3EFE0]/10 rounded-xl hover:bg-white/5 block"
+                >
+                  Sign in
+                </Link>
+              )}
+            </div>
+          </>
+        )}
 
         {isContactModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6">
@@ -164,12 +239,12 @@ export default function LandingPage() {
         <main className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           {/* Left Content */}
-          <div className="lg:col-span-5 flex flex-col justify-center pt-8 pb-4 lg:pb-0 z-10 relative">
-            <h1 className="text-[5.5rem] md:text-[8rem] lg:text-[10rem] font-bold leading-none tracking-tighter mb-4 lg:mb-6 text-[#F3EFE0]">
+          <div className="lg:col-span-5 flex flex-col justify-center pt-8 pb-4 lg:pb-0 z-10 relative max-w-full">
+            <h1 className="text-[4.5rem] sm:text-[5.5rem] md:text-[8rem] lg:text-[10rem] font-bold leading-none tracking-tighter mb-4 lg:mb-6 text-[#F3EFE0] max-w-full break-words">
               CURATED LIVING.
             </h1>
             
-            <p className="text-lg md:text-2xl text-[#F3EFE0]/80 mb-8 max-w-md leading-relaxed">
+            <p className="text-lg md:text-2xl text-[#F3EFE0]/80 mb-8 max-w-full md:max-w-md leading-relaxed">
               Where vintage soul embraces modern elegance.
             </p>
             
@@ -187,7 +262,7 @@ export default function LandingPage() {
 
          {/* Right Image Container */}
           <div 
-            className="lg:col-span-7 h-[450px] md:h-[650px] w-full rounded-t-[2.5rem] lg:rounded-tl-none lg:rounded-tr-[2.5rem] overflow-hidden relative shadow-2xl translate-y-6 max-lg:[mask-image:linear-gradient(to_bottom,transparent_0%,black_20%)] max-lg:[-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,black_20%)] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_40%)] lg:[-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_40%)]"
+            className="lg:col-span-7 h-[450px] md:h-[650px] w-full max-w-full rounded-t-[2.5rem] lg:rounded-tl-none lg:rounded-tr-[2.5rem] overflow-hidden relative shadow-2xl translate-y-6 max-lg:[mask-image:linear-gradient(to_bottom,transparent_0%,black_20%)] max-lg:[-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,black_20%)] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_40%)] lg:[-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_40%)]"
           >
             <Image
               src="/render.jpg" 
