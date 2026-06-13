@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { TIME_SLOTS } from '@/lib/bookingSlots'
 import { toast } from 'react-hot-toast'
@@ -249,13 +250,12 @@ export default function ManageBooking() {
       ) : bookings.length === 0 ? (
         <div className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 text-center">
           <p className="text-base md:text-lg text-[#DDE0D8]">No upcoming consultations at the moment.</p>
-          <button
-            type="button"
+          <Link
+            href="/book"
             className="inline-flex items-center justify-center rounded-full border border-[#F3EFE0]/10 bg-[#F3EFE0]/5 px-6 py-3 text-sm font-semibold text-[#F3EFE0] transition hover:bg-[#F3EFE0]/10"
-            onClick={() => window.alert('Redirect to booking flow')}
           >
             Book Now
-          </button>
+          </Link>
         </div>
       ) : (
         <div className="grid gap-6">

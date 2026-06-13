@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
+import { toast } from 'react-hot-toast';
 
 export default function LandingPage() {
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -40,10 +41,11 @@ export default function LandingPage() {
 
     if (!error) {
       setIsSent(true);
+      toast.success('Message sent successfully! We will get back to you soon.');
       (e.target as HTMLFormElement).reset(); // Clears the form
     } else {
       console.error(error);
-      alert("Something went wrong. Please try again.");
+      toast.error('Something went wrong. Please try again.');
     }
     setIsSubmitting(false);
   };
@@ -88,32 +90,34 @@ export default function LandingPage() {
           </div>
 
           {/* Right Side: Action Buttons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               type="button"
               onClick={() => setContactModalOpen(true)}
-              className="px-5 py-2.5 bg-[#1F302A] border border-[#F3EFE0]/20 text-[#F3EFE0] rounded-full hover:bg-white/10 transition-all text-sm font-medium"
+              className="hidden sm:inline-flex px-5 py-2.5 bg-[#1F302A] border border-[#F3EFE0]/20 text-[#F3EFE0] rounded-full hover:bg-white/10 transition-all text-sm font-medium"
             >
               Contact
             </button>
             <Link 
               href={user ? "/book" : "/login"} 
-              className="px-6 py-2.5 bg-[#D48C70] text-[#1F302A] rounded-full hover:bg-[#E8B49B] transition-all text-sm font-bold shadow-[0_0_15px_rgba(212,140,112,0.3)]"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 bg-[#D48C70] text-[#1F302A] rounded-full hover:bg-[#E8B49B] transition-all text-xs sm:text-sm font-bold shadow-[0_0_15px_rgba(212,140,112,0.3)]"
             >
-              Book consultation
+              <span className="hidden sm:inline">Book Free consultation</span>
+              <span className="sm:hidden">Book</span>
             </Link>
             {user ? (
               <>
                 <Link
                   href="/bookings"
-                  className="hidden md:inline-flex px-4 py-2 rounded-full border border-white/20 text-[#F3EFE0] hover:bg-white/10 transition-colors text-sm font-medium"
+                  className="px-3 sm:px-4 py-2 rounded-full border border-white/20 text-[#F3EFE0] hover:bg-white/10 transition-colors text-xs sm:text-sm font-medium"
                 >
-                  My Bookings
+                  <span className="hidden sm:inline">My Bookings</span>
+                  <span className="sm:hidden">Bookings</span>
                 </Link>
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="hidden md:inline-flex px-4 py-2 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors text-sm font-medium"
+                  className="px-3 sm:px-4 py-2 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors text-xs sm:text-sm font-medium"
                 >
                   Logout
                 </button>
@@ -121,7 +125,7 @@ export default function LandingPage() {
             ) : (
               <Link 
                 href="/login" 
-                className="hidden md:block text-sm font-medium text-[#F3EFE0]/70 hover:text-[#F3EFE0] transition-colors px-4 py-2 border border-[#F3EFE0]/20 rounded-full hover:bg-white/5"
+                className="text-xs sm:text-sm font-medium text-[#F3EFE0]/70 hover:text-[#F3EFE0] transition-colors px-3 sm:px-4 py-2 border border-[#F3EFE0]/20 rounded-full hover:bg-white/5"
               >
                 Sign in
               </Link>
@@ -301,11 +305,12 @@ export default function LandingPage() {
               <h2 className="text-3xl font-bold tracking-tight mb-2 lowercase">start a conversation.</h2>
               <p className="mb-8 opacity-70">Have a space in mind? Drop your details below.</p>
               
-              <form className="space-y-6">
+              <form onSubmit={handleContactSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold mb-2">Name <span className="text-red-500">*</span></label>
                   <input 
                     type="text" 
+                    name="name"
                     required
                     placeholder="John Doe"
                     className="w-full px-5 py-4 rounded-xl bg-white/50 border border-[#2A3F38]/20 focus:outline-none focus:border-[#2A3F38] transition-colors"
@@ -316,6 +321,7 @@ export default function LandingPage() {
                   <label className="block text-sm font-semibold mb-2">Email <span className="text-red-500">*</span></label>
                   <input 
                     type="email" 
+                    name="email"
                     required
                     placeholder="john@example.com"
                     className="w-full px-5 py-4 rounded-xl bg-white/50 border border-[#2A3F38]/20 focus:outline-none focus:border-[#2A3F38] transition-colors"
@@ -325,6 +331,7 @@ export default function LandingPage() {
                 <div>
                   <label className="block text-sm font-semibold mb-2">Message <span className="text-red-500">*</span></label>
                   <textarea 
+                    name="message"
                     required
                     rows={4}
                     placeholder="Tell us about the room you want to transform..."
@@ -334,9 +341,10 @@ export default function LandingPage() {
 
                 <button 
                   type="submit"
-                  className="w-full py-4 rounded-xl bg-[#2A3F38] text-[#F3EFE0] font-bold hover:bg-[#1F302A] transition-colors"
+                  disabled={isSubmitting}
+                  className="w-full py-4 rounded-xl bg-[#2A3F38] text-[#F3EFE0] font-bold hover:bg-[#1F302A] transition-colors disabled:opacity-50"
                 >
-                  Send Message
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
                 </button>
               </form>
             </div>

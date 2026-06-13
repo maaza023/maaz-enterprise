@@ -122,7 +122,7 @@ export default function BookingForm() {
             </svg>
           </div>
           <h1 className="text-4xl font-extrabold tracking-tighter text-[#D96B43] lowercase">
-            book consultation
+            book free consultation
           </h1>
           <p className="text-xs text-gray-400 mt-2 tracking-wide uppercase">
             schedule an on-site structural assessment for your vintage build
