@@ -7,8 +7,14 @@ import { Toaster } from "react-hot-toast";
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Maaz Enterprise",
-  description: "Vintage structure design with uncompromising modern engineering.",
+  title: "Maaz Enterprise | Curated Living & Vintage Modern Design",
+  description: "Where vintage soul embraces modern elegance. Premium structural design, modern architecture, and curated living spaces by Maaz Enterprise.",
+  keywords: ["Maaz Enterprise", "curated living", "vintage modern architecture", "structural design", "premium home styling", "interior elegance"],
+  openGraph: {
+    title: "Maaz Enterprise | Curated Living & Vintage Modern Design",
+    description: "Where vintage soul embraces modern elegance. Premium structural design, modern architecture, and curated living spaces by Maaz Enterprise.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
