@@ -335,7 +335,7 @@ export default function LandingPage() {
           {/* 2. Why Choose Us Section (Interior Focus) */}
           <section id="services" className="px-4 md:px-0">
             <h2 className="text-4xl md:text-5xl font-bold text-[#F3EFE0] tracking-tight mb-12 lowercase text-center md:text-left">
-              why people choose maazenterprise.
+              Why people choose MaazEnterprise?
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="p-8 rounded-[2rem] bg-[#F3EFE0] text-[#2A3F38]">
