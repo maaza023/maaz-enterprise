@@ -240,7 +240,7 @@ export default function LandingPage() {
           
           {/* Left Content */}
           <div className="lg:col-span-5 flex flex-col justify-center pt-8 pb-4 lg:pb-0 z-10 relative max-w-full">
-            <h1 className="text-[4.5rem] sm:text-[5.5rem] md:text-[8rem] lg:text-[10rem] font-bold leading-none tracking-tighter mb-4 lg:mb-6 text-[#F3EFE0] max-w-full break-words">
+            <h1 className="text-[4.5rem] sm:text-[5.5rem] md:text-[8rem] lg:text-[10rem] font-bold leading-none tracking-tighter mb-4 lg:mb-6 text-[#F3EFE0] max-w-full lg:max-w-none break-words lg:break-normal">
               CURATED LIVING.
             </h1>
             
