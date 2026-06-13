@@ -12,6 +12,7 @@ export default function AuthForm() {
   const [error, setError] = useState<string | null>(null)
   
   const [showToast, setShowToast] = useState(false)
+  const [isSignedUp, setIsSignedUp] = useState(false)
 
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
@@ -38,17 +39,28 @@ export default function AuthForm() {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              full_name: fullName,
+              username: username
+            }
+          }
         })
         if (authError) throw authError
 
         if (authData.user) {
+          const user = authData.user
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert([{ id: authData.user.id, username, full_name: fullName, email }])
+            .upsert({
+              id: user.id,
+              email: user.email,
+              full_name: user.user_metadata?.full_name || fullName,
+              username: username
+            })
           
           if (profileError) throw profileError
-          alert('Registration successful! Please check your email for confirmation.')
-          setMode('login')
+          setIsSignedUp(true)
         }
       } else if (mode === 'login') {
         let targetEmail = loginIdentifier
@@ -176,113 +188,140 @@ export default function AuthForm() {
           </div>
         )}
 
-        <form onSubmit={handleAuth} className="space-y-4">
-          
-          {mode === 'signup' && (
-            <>
-              <div>
-                <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Full Name</label>
-                <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
+        {isSignedUp ? (
+          <div className="p-8 bg-[#1A3329]/50 border border-emerald-500/20 rounded-[2rem] text-center space-y-6 animate-fade-in">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/5">
+              <span className="text-3xl">✅</span>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-extrabold tracking-tight text-[#D96B43]">
+                ✅ Successfully Signed Up!
+              </h2>
+              <p className="text-xs text-gray-400 uppercase tracking-wide">
+                Please check your email for confirmation.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setIsSignedUp(false)
+                setMode('login')
+              }}
+              className="w-full py-4 bg-[#E88B60] hover:bg-[#E88B60]/90 text-white font-semibold text-sm rounded-2xl transition-all shadow-lg shadow-[#E88B60]/10 tracking-wide uppercase"
+            >
+              go to login
+            </button>
+          </div>
+        ) : (
+          <>
+            <form onSubmit={handleAuth} className="space-y-4">
+              
+              {mode === 'signup' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Full Name</label>
+                    <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Username</label>
+                    <input type="text" required value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Email Address</label>
+                    <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
+                  </div>
+                </>
+              )}
+
+              {(mode === 'login' || mode === 'forgot') && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Username or Email</label>
+                  <input type="text" required value={loginIdentifier} onChange={(e) => setLoginIdentifier(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
+                </div>
+              )}
+
+              {mode === 'verify' && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">6-Digit Verification Code</label>
+                  <input type="text" required maxLength={6} placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value)} className="w-full text-center tracking-widest text-lg font-bold py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
+                </div>
+              )}
+
+              {(mode === 'login' || mode === 'signup' || mode === 'reset') && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
+                    {mode === 'reset' ? 'New Password' : 'Password'}
+                  </label>
+                  <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
+                </div>
+              )}
+
+              {mode === 'reset' && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Retype New Password</label>
+                  <input type="password" required value={retypePassword} onChange={(e) => setRetypePassword(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
+                </div>
+              )}
+
+              {mode === 'login' && (
+                <div className="text-right">
+                  <button type="button" onClick={() => setMode('forgot')} className="text-xs text-gray-400 hover:text-[#D96B43] transition-colors">
+                    forgot password?
+                  </button>
+                </div>
+              )}
+
+              <button type="submit" disabled={loading} className="w-full py-4 mt-2 bg-[#E88B60] hover:bg-[#E88B60]/90 disabled:bg-gray-700 text-white font-semibold text-sm rounded-2xl transition-all shadow-lg shadow-[#E88B60]/10 tracking-wide uppercase">
+                {loading ? 'Processing...' : (
+                  mode === 'login' ? 'login' :
+                  mode === 'signup' ? 'create account' :
+                  mode === 'forgot' ? 'send code' :
+                  mode === 'verify' ? 'verify and login' : 'save password'
+                )}
+              </button>
+            </form>
+            {/* The Google Button */}
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/10" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-[#EEB261]/20 text-white font-medium">Or continue with</span>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Username</label>
-                <input type="text" required value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Email Address</label>
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
-              </div>
-            </>
-          )}
 
-          {(mode === 'login' || mode === 'forgot') && (
-            <div>
-              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Username or Email</label>
-              <input type="text" required value={loginIdentifier} onChange={(e) => setLoginIdentifier(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
-            </div>
-          )}
-
-          {mode === 'verify' && (
-            <div>
-              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">6-Digit Verification Code</label>
-              <input type="text" required maxLength={6} placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value)} className="w-full text-center tracking-widest text-lg font-bold py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
-            </div>
-          )}
-
-          {(mode === 'login' || mode === 'signup' || mode === 'reset') && (
-            <div>
-              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
-                {mode === 'reset' ? 'New Password' : 'Password'}
-              </label>
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
-            </div>
-          )}
-
-          {mode === 'reset' && (
-            <div>
-              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Retype New Password</label>
-              <input type="password" required value={retypePassword} onChange={(e) => setRetypePassword(e.target.value)} className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
-            </div>
-          )}
-
-          {mode === 'login' && (
-            <div className="text-right">
-              <button type="button" onClick={() => setMode('forgot')} className="text-xs text-gray-400 hover:text-[#D96B43] transition-colors">
-                forgot password?
+              <button
+                type="button"
+                onClick={handleGoogleLogin} // This uses the function we defined earlier
+                className="w-full mt-6 flex items-center justify-center gap-3 py-3 border border-[#E88B60] rounded-xl hover:bg-[#E88B60]/20 transition-all text-sm font-medium text-white"
+              >
+                <Image 
+                  src="https://www.svgrepo.com/show/475656/google-color.svg" 
+                  alt="Google" 
+                  width={18} 
+                  height={18} 
+                />
+                Continue with Google
               </button>
             </div>
-          )}
 
-          <button type="submit" disabled={loading} className="w-full py-4 mt-2 bg-[#E88B60] hover:bg-[#E88B60]/90 disabled:bg-gray-700 text-white font-semibold text-sm rounded-2xl transition-all shadow-lg shadow-[#E88B60]/10 tracking-wide uppercase">
-            {loading ? 'Processing...' : (
-              mode === 'login' ? 'login' :
-              mode === 'signup' ? 'create account' :
-              mode === 'forgot' ? 'send code' :
-              mode === 'verify' ? 'verify and login' : 'save password'
-            )}
-          </button>
-        </form>
-        {/* The Google Button */}
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10" />
+            <div className="mt-6 text-center text-xs text-gray-400">
+              {mode === 'login' && (
+                <p>Don't have an account?{' '}
+                  <button onClick={() => setMode('signup')} className="text-[#D96B43] font-medium hover:underline">sign up</button>
+                </p>
+              )}
+              {mode === 'signup' && (
+                <p>Already have an account?{' '}
+                  <button onClick={() => setMode('login')} className="text-[#D96B43] font-medium hover:underline">login</button>
+                </p>
+              )}
+              {(mode === 'forgot' || mode === 'verify' || mode === 'reset') && (
+                <button onClick={() => setMode('login')} className="text-[#D96B43] font-medium hover:underline">← back to login</button>
+              )}
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-[#EEB261]/20 text-white font-medium">Or continue with</span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleGoogleLogin} // This uses the function we defined earlier
-            className="w-full mt-6 flex items-center justify-center gap-3 py-3 border border-[#E88B60] rounded-xl hover:bg-[#E88B60]/20 transition-all text-sm font-medium text-white"
-          >
-            <Image 
-              src="https://www.svgrepo.com/show/475656/google-color.svg" 
-              alt="Google" 
-              width={18} 
-              height={18} 
-            />
-            Continue with Google
-          </button>
-        </div>
-
-        <div className="mt-6 text-center text-xs text-gray-400">
-          {mode === 'login' && (
-            <p>Don't have an account?{' '}
-              <button onClick={() => setMode('signup')} className="text-[#D96B43] font-medium hover:underline">sign up</button>
-            </p>
-          )}
-          {mode === 'signup' && (
-            <p>Already have an account?{' '}
-              <button onClick={() => setMode('login')} className="text-[#D96B43] font-medium hover:underline">login</button>
-            </p>
-          )}
-          {(mode === 'forgot' || mode === 'verify' || mode === 'reset') && (
-            <button onClick={() => setMode('login')} className="text-[#D96B43] font-medium hover:underline">← back to login</button>
-          )}
-        </div>
+          </>
+        )}
 
       </div>
     </div>
