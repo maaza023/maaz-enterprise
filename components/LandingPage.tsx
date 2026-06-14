@@ -31,26 +31,49 @@ export default function LandingPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    const message = formData.get('message') as string;
+    try {
+      const formData = new FormData(e.currentTarget);
+      const name = formData.get('name') as string;
+      const email = formData.get('email') as string;
+      const message = formData.get('message') as string;
 
-    // Send to Supabase
-    const { error } = await supabase
-      .from('leads')
-      .insert([{ name, email, message, phone }]);
+      // Verify that payload only contains expected schema columns and no undefined values
+      const payload = {
+        name: name || '',
+        email: email || '',
+        message: message || '',
+        phone: phone || '',
+      };
 
-    if (!error) {
-      setIsSent(true);
-      toast.success('Message sent successfully! We will get back to you soon.');
-      setPhone('');
-      (e.target as HTMLFormElement).reset(); // Clears the form
-    } else {
-      console.error(error);
-      toast.error('Something went wrong. Please try again.');
+      console.log('Diagnostic: Sending payload to leads table:', JSON.stringify(payload, null, 2));
+
+      const { data, error } = await supabase
+        .from('leads')
+        .insert([payload])
+        .select();
+
+      if (error) {
+        console.error('Diagnostic: Supabase query returned an error:', JSON.stringify(error, null, 2));
+        console.error('Detailed Error Fields:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
+        toast.error(`Submission failed: ${error.message}`);
+      } else {
+        console.log('Diagnostic: Insert succeeded:', JSON.stringify(data, null, 2));
+        setIsSent(true);
+        toast.success('Message sent successfully! We will get back to you soon.');
+        setPhone('');
+        (e.target as HTMLFormElement).reset(); // Clears the form
+      }
+    } catch (err: any) {
+      console.error('Diagnostic: Exception caught during submission:', err);
+      toast.error(`Exception occurred: ${err?.message || err}`);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
   useEffect(() => {
     const fetchUser = async () => {
@@ -71,22 +94,22 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#2A3F38] text-[#F3EFE0] font-sans overflow-x-hidden selection:bg-[#E8B49B] selection:text-[#2A3F38]">
-      
+
       {/* Background Glows */}
       <div className="absolute -top-20 -left-10 w-[36rem] h-[36rem] bg-[#2A5C44] rounded-full mix-blend-screen filter blur-[130px] opacity-30 pointer-events-none" />
       <div className="absolute top-10 right-[-4rem] w-[45rem] h-[45rem] bg-[#D48C70] rounded-full mix-blend-screen filter blur-[160px] opacity-18 pointer-events-none" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 pt-8 pb-20">
-        
-      
+
+
         <nav className="flex items-center justify-between mb-24">
           {/* Left Side: Logo */}
           <div className="flex items-center">
-            <Image 
-              src="/logo.png" 
-              alt="Maaz Logo" 
-              width={250} 
-              height={100} 
+            <Image
+              src="/logo.png"
+              alt="Maaz Logo"
+              width={250}
+              height={100}
               className="w-32 md:w-52 h-auto object-contain"
               priority
             />
@@ -103,8 +126,8 @@ export default function LandingPage() {
               >
                 Contact
               </button>
-              <Link 
-                href={user ? "/book" : "/login"} 
+              <Link
+                href={user ? "/book" : "/login"}
                 className="px-6 py-2.5 bg-[#D48C70] text-[#1F302A] rounded-full hover:bg-[#E8B49B] transition-all text-sm font-bold shadow-[0_0_15px_rgba(212,140,112,0.3)]"
               >
                 Book Free Consultation
@@ -126,8 +149,8 @@ export default function LandingPage() {
                   </button>
                 </>
               ) : (
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   className="text-sm font-medium text-[#F3EFE0]/70 hover:text-[#F3EFE0] transition-colors px-4 py-2 border border-[#F3EFE0]/20 rounded-full hover:bg-white/5"
                 >
                   Sign in
@@ -153,8 +176,8 @@ export default function LandingPage() {
         {isMobileMenuOpen && (
           <>
             {/* Invisible fixed full-screen overlay to close menu on click outside */}
-            <div 
-              className="fixed inset-0 z-40 md:hidden bg-transparent" 
+            <div
+              className="fixed inset-0 z-40 md:hidden bg-transparent"
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <div className="absolute top-24 left-6 right-6 z-50 md:hidden bg-[#1F302A] border border-[#F3EFE0]/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
@@ -168,15 +191,15 @@ export default function LandingPage() {
               >
                 Contact
               </button>
-              
-              <Link 
-                href={user ? "/book" : "/login"} 
+
+              <Link
+                href={user ? "/book" : "/login"}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="w-full px-5 py-3 bg-[#D48C70] text-[#1F302A] rounded-xl hover:bg-[#E8B49B] transition-all text-center text-sm font-bold block"
               >
                 Book Free Consultation
               </Link>
-              
+
               {user ? (
                 <>
                   <Link
@@ -198,8 +221,8 @@ export default function LandingPage() {
                   </button>
                 </>
               ) : (
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="w-full text-center text-sm font-medium text-[#F3EFE0]/70 hover:text-[#F3EFE0] transition-colors px-5 py-3 border border-[#F3EFE0]/10 rounded-xl hover:bg-white/5 block"
                 >
@@ -237,23 +260,23 @@ export default function LandingPage() {
           </div>
         )}
 
-      {/* Hero Section Grid */}
+        {/* Hero Section Grid */}
         <main className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          
+
           {/* Left Content */}
           <div className="lg:col-span-5 flex flex-col justify-center pt-8 pb-4 lg:pb-0 z-10 relative max-w-full">
             <h1 className="text-[4.5rem] sm:text-[5.5rem] md:text-[8rem] lg:text-[10rem] font-bold leading-none tracking-tighter mb-4 lg:mb-6 text-[#F3EFE0] max-w-full lg:max-w-none break-words lg:break-normal">
               CURATED LIVING.
             </h1>
-            
+
             <p className="text-lg md:text-2xl text-[#F3EFE0]/80 mb-8 max-w-full md:max-w-md leading-relaxed">
               Where vintage soul embraces modern elegance.
             </p>
-            
+
             <div>
               {!user && (
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   className="inline-flex items-center px-6 py-4 bg-white/5 border border-[#F3EFE0]/20 rounded-full hover:bg-white/10 transition-all text-sm font-medium backdrop-blur-sm"
                 >
                   Get started <span className="ml-2">›</span>
@@ -262,12 +285,12 @@ export default function LandingPage() {
             </div>
           </div>
 
-         {/* Right Image Container */}
-          <div 
+          {/* Right Image Container */}
+          <div
             className="lg:col-span-7 h-[450px] md:h-[650px] w-full max-w-full rounded-t-[2.5rem] lg:rounded-tl-none lg:rounded-tr-[2.5rem] overflow-hidden relative shadow-2xl translate-y-6 max-lg:[mask-image:linear-gradient(to_bottom,transparent_0%,black_20%)] max-lg:[-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,black_20%)] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_40%)] lg:[-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_40%)]"
           >
             <Image
-              src="/render.jpg" 
+              src="/render.jpg"
               alt="Vintage Modern Structural Render"
               fill
               className="object-cover"
@@ -275,14 +298,14 @@ export default function LandingPage() {
               sizes="(max-width: 1024px) 100vw, 60vw"
             />
           </div>
-          
+
         </main>
 
         {/* =========================================
             LOWER PAGE CONTENT
         {/* Bottom Cards Section */}
         {/* Added 'relative z-10' to make the cards sit completely on top of the image */}
-       {/* =========================================
+        {/* =========================================
             LOWER PAGE CONTENT
             ========================================= */}
         <div className="mt-32 space-y-40 pb-24 relative z-10">
@@ -381,35 +404,35 @@ export default function LandingPage() {
             <div className="p-8 md:p-12 rounded-[2.5rem] bg-[#F3EFE0] text-[#2A3F38]">
               <h2 className="text-3xl font-bold tracking-tight mb-2 lowercase">start a conversation.</h2>
               <p className="mb-8 opacity-70">Have a space in mind? Drop your details below.</p>
-              
+
               <form onSubmit={handleContactSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold mb-2">Name <span className="text-red-500">*</span></label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     name="name"
                     required
                     placeholder="John Doe"
                     className="w-full px-5 py-4 rounded-xl bg-white/50 border border-[#2A3F38]/20 focus:outline-none focus:border-[#2A3F38] transition-colors"
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold mb-2">Email <span className="text-red-500">*</span></label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       name="email"
                       required
                       placeholder="john@example.com"
                       className="w-full px-5 py-4 rounded-xl bg-white/50 border border-[#2A3F38]/20 focus:outline-none focus:border-[#2A3F38] transition-colors"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-semibold mb-2">Phone Number <span className="text-red-500">*</span></label>
-                    <input 
-                      type="tel" 
+                    <input
+                      type="tel"
                       name="phone"
                       required
                       pattern="[0-9]{10}"
@@ -423,7 +446,7 @@ export default function LandingPage() {
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">Message <span className="text-red-500">*</span></label>
-                  <textarea 
+                  <textarea
                     name="message"
                     required
                     rows={4}
@@ -432,7 +455,7 @@ export default function LandingPage() {
                   ></textarea>
                 </div>
 
-                <button 
+                <button
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full py-4 rounded-xl bg-[#2A3F38] text-[#F3EFE0] font-bold hover:bg-[#1F302A] transition-colors disabled:opacity-50"
