@@ -67,6 +67,13 @@ export default function BookingForm() {
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      alert("Please log in to confirm your booking")
+      window.location.href = '/login'
+      return
+    }
     
     if (!time) {
       setError('Please select an available time slot.')
@@ -78,9 +85,6 @@ export default function BookingForm() {
     setSuccess(false)
 
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) throw new Error('You must be logged in to book.')
-
       const { error: insertError } = await supabase
         .from('bookings')
         .insert([{
