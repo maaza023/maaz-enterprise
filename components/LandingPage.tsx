@@ -33,6 +33,19 @@ export default function LandingPage() {
 
     try {
       const formData = new FormData(e.currentTarget);
+
+      // Honeypot spam filter check
+      const botcheck = formData.get('botcheck') as string;
+      if (botcheck) {
+        console.warn('Spam detected via honeypot.');
+        setIsSubmitting(false);
+        setIsSent(true);
+        toast.success('Message sent successfully! We will get back to you soon.');
+        setPhone('');
+        (e.target as HTMLFormElement).reset();
+        return;
+      }
+
       const name = formData.get('name') as string;
       const email = formData.get('email') as string;
       const message = formData.get('message') as string;
@@ -406,6 +419,13 @@ export default function LandingPage() {
               <p className="mb-8 opacity-70">Have a space in mind? Drop your details below.</p>
 
               <form onSubmit={handleContactSubmit} className="space-y-6">
+                <input
+                  type="text"
+                  name="botcheck"
+                  style={{ display: 'none' }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
                 <div>
                   <label className="block text-sm font-semibold mb-2">Name <span className="text-red-500">*</span></label>
                   <input
