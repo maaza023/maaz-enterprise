@@ -101,6 +101,35 @@ export default function BookingForm() {
         throw insertError
       }
 
+      // Retrieve customer name from profile or metadata
+      let clientName = user.user_metadata?.full_name
+      if (!clientName) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single()
+        if (profileData?.full_name) {
+          clientName = profileData.full_name
+        }
+      }
+      if (!clientName) {
+        clientName = user.email?.split('@')[0] || 'Valued Client'
+      }
+
+      // Send confirmation email asynchronously
+      fetch('/api/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName,
+          clientEmail: email,
+          date,
+          time,
+          type: 'confirmation',
+        }),
+      }).catch((err) => console.error('Failed to send confirmation email:', err))
+
       setSuccess(true)
       toast.success('Consultation successfully scheduled!')
       setAddress('')

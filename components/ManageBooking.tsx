@@ -11,7 +11,9 @@ type Booking = {
   date: string
   time: string
   status: 'Confirmed' | 'Pending' | 'Rescheduled' | 'Cancelled'
+  email?: string
 }
+
 
 export default function ManageBooking() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -40,7 +42,7 @@ export default function ManageBooking() {
 
         const { data, error } = await supabase
           .from('bookings')
-          .select('id, consultation_date, consultation_time, status')
+          .select('id, consultation_date, consultation_time, status, email')
           .eq('user_id', authData.user.id)
           .order('consultation_date', { ascending: true })
           .order('consultation_time', { ascending: true })
@@ -52,6 +54,7 @@ export default function ManageBooking() {
               date: row.consultation_date,
               time: row.consultation_time,
               status: row.status ?? 'Confirmed',
+              email: row.email,
             })),
           )
         } else {
@@ -151,6 +154,44 @@ export default function ManageBooking() {
           : booking,
       ),
     )
+    // Send rescheduled email asynchronously
+    const triggerRescheduleEmail = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        let clientName = user.user_metadata?.full_name
+        if (!clientName) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single()
+          if (profile?.full_name) clientName = profile.full_name
+        }
+        if (!clientName) clientName = user.email?.split('@')[0] || 'Valued Client'
+
+        const clientEmail = currentEditBooking.email || user.email || ''
+
+        if (clientEmail) {
+          fetch('/api/emails', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientName,
+              clientEmail,
+              date: draftDate,
+              time: draftTime,
+              type: 'reschedule',
+            }),
+          }).catch((err) => console.error('Failed to send reschedule email:', err))
+        }
+      } catch (err) {
+        console.error('Error triggering reschedule email:', err)
+      }
+    }
+    triggerRescheduleEmail()
+
     setEditBookingId(null)
     setSavingBookingId(null)
     toast.success('Booking Rescheduled')
@@ -177,6 +218,44 @@ export default function ManageBooking() {
       setCancelingBookingId(null)
       return
     }
+
+    // Send cancellation email asynchronously
+    const triggerCancellationEmail = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        let clientName = user.user_metadata?.full_name
+        if (!clientName) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single()
+          if (profile?.full_name) clientName = profile.full_name
+        }
+        if (!clientName) clientName = user.email?.split('@')[0] || 'Valued Client'
+
+        const clientEmail = selectedBooking.email || user.email || ''
+
+        if (clientEmail) {
+          fetch('/api/emails', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientName,
+              clientEmail,
+              date: selectedBooking.date,
+              time: selectedBooking.time,
+              type: 'cancellation',
+            }),
+          }).catch((err) => console.error('Failed to send cancellation email:', err))
+        }
+      } catch (err) {
+        console.error('Error triggering cancellation email:', err)
+      }
+    }
+    triggerCancellationEmail()
 
     setBookings((current) => current.filter((booking) => booking.id !== bookingId))
     if (editBookingId === bookingId) {
