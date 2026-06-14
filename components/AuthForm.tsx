@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { supabase } from "@/lib/supabase"; // Use your existing path
 import Image from "next/image";
-type AuthMode = 'login' | 'signup' | 'forgot' | 'verify' | 'reset'
+type AuthMode = 'login' | 'signup' | 'signup-verify' | 'forgot' | 'verify' | 'reset'
 
 export default function AuthForm() {
   const router = useRouter()
@@ -48,8 +48,23 @@ export default function AuthForm() {
         })
         if (authError) throw authError
 
+        // If Confirm Email is enabled, we move to the email verification screen (OTP).
+        // The profiles table row is NOT inserted yet because they are not verified.
         if (authData.user) {
-          const user = authData.user
+          setMode('signup-verify')
+        }
+      } else if (mode === 'signup-verify') {
+        // Verify OTP for Signup
+        const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+          email,
+          token: otpCode,
+          type: 'signup',
+        })
+        if (verifyError) throw verifyError
+
+        // Now that the email is verified, the user is authenticated and we can safely insert profile data.
+        if (verifyData.user) {
+          const user = verifyData.user
           const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
@@ -175,6 +190,7 @@ export default function AuthForm() {
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tighter text-[#D96B43] lowercase">
             {mode === 'login' && 'login'}
             {mode === 'signup' && 'sign up'}
+            {mode === 'signup-verify' && 'verify email'}
             {mode === 'forgot' && 'recover'}
             {mode === 'verify' && 'verify code'}
             {mode === 'reset' && 'new password'}
@@ -195,10 +211,10 @@ export default function AuthForm() {
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-extrabold tracking-tight text-[#D96B43]">
-                ✅ Successfully Signed Up!
+                ✅ Successfully Verified!
               </h2>
               <p className="text-xs text-gray-400 uppercase tracking-wide">
-                Please check your email for confirmation.
+                Your account is ready. You can now log in.
               </p>
             </div>
             <button
@@ -239,10 +255,15 @@ export default function AuthForm() {
                 </div>
               )}
 
-              {mode === 'verify' && (
+              {(mode === 'verify' || mode === 'signup-verify') && (
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">6-Digit Verification Code</label>
-                  <input type="text" required maxLength={6} placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value)} className="w-full text-center tracking-widest text-lg font-bold py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
+                  <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">8-Digit Verification Code</label>
+                  <input type="text" required maxLength={8} placeholder="00000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value)} className="w-full text-center tracking-widest text-lg font-bold py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white focus:outline-none focus:border-[#D96B43]/50 transition-colors" />
+                  {mode === 'signup-verify' && (
+                    <p className="text-[10px] text-gray-400 mt-2 text-center">
+                      We've sent an 8-digit verification code to <span className="text-white font-semibold">{email}</span>.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -274,6 +295,7 @@ export default function AuthForm() {
                 {loading ? 'Processing...' : (
                   mode === 'login' ? 'login' :
                   mode === 'signup' ? 'create account' :
+                  mode === 'signup-verify' ? 'confirm email' :
                   mode === 'forgot' ? 'send code' :
                   mode === 'verify' ? 'verify and login' : 'save password'
                 )}
@@ -316,7 +338,7 @@ export default function AuthForm() {
                   <button onClick={() => setMode('login')} className="text-[#D96B43] font-medium hover:underline">login</button>
                 </p>
               )}
-              {(mode === 'forgot' || mode === 'verify' || mode === 'reset') && (
+              {(mode === 'forgot' || mode === 'verify' || mode === 'signup-verify' || mode === 'reset') && (
                 <button onClick={() => setMode('login')} className="text-[#D96B43] font-medium hover:underline">← back to login</button>
               )}
             </div>
