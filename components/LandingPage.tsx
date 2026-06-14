@@ -25,6 +25,7 @@ export default function LandingPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const [phone, setPhone] = useState('');
 
   const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -38,11 +39,12 @@ export default function LandingPage() {
     // Send to Supabase
     const { error } = await supabase
       .from('leads')
-      .insert([{ name, email, message }]);
+      .insert([{ name, email, message, phone }]);
 
     if (!error) {
       setIsSent(true);
       toast.success('Message sent successfully! We will get back to you soon.');
+      setPhone('');
       (e.target as HTMLFormElement).reset(); // Clears the form
     } else {
       console.error(error);
@@ -392,15 +394,31 @@ export default function LandingPage() {
                   />
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Email <span className="text-red-500">*</span></label>
-                  <input 
-                    type="email" 
-                    name="email"
-                    required
-                    placeholder="john@example.com"
-                    className="w-full px-5 py-4 rounded-xl bg-white/50 border border-[#2A3F38]/20 focus:outline-none focus:border-[#2A3F38] transition-colors"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Email <span className="text-red-500">*</span></label>
+                    <input 
+                      type="email" 
+                      name="email"
+                      required
+                      placeholder="john@example.com"
+                      className="w-full px-5 py-4 rounded-xl bg-white/50 border border-[#2A3F38]/20 focus:outline-none focus:border-[#2A3F38] transition-colors"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Phone Number <span className="text-red-500">*</span></label>
+                    <input 
+                      type="tel" 
+                      name="phone"
+                      required
+                      pattern="[0-9]{10}"
+                      placeholder="1234567890"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full px-5 py-4 rounded-xl bg-white/50 border border-[#2A3F38]/20 focus:outline-none focus:border-[#2A3F38] transition-colors"
+                    />
+                  </div>
                 </div>
 
                 <div>

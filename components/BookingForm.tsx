@@ -12,6 +12,8 @@ export default function BookingForm() {
   const [success, setSuccess] = useState(false)
 
   // Form Fields
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [pincode, setPincode] = useState('')
   const [date, setDate] = useState('')
@@ -22,9 +24,17 @@ export default function BookingForm() {
   const [bookedSlots, setBookedSlots] = useState<string[]>([])
   const [checkingAvailability, setCheckingAvailability] = useState(false)
 
-  // Calculate today's date for the minimum date lock
+  // Calculate today's date for the minimum date lock and fetch logged-in user's email
   useEffect(() => {
     setMinDate(new Date().toISOString().split('T')[0])
+    
+    const fetchUserEmail = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.email) {
+        setEmail(user.email)
+      }
+    }
+    fetchUserEmail()
   }, [])
 
   // LIVE CHECK: Fetch taken slots whenever the user selects a new Date
@@ -75,6 +85,8 @@ export default function BookingForm() {
         .from('bookings')
         .insert([{
             user_id: user.id,
+            email,
+            phone,
             address,
             pincode,
             consultation_date: date,
@@ -95,6 +107,7 @@ export default function BookingForm() {
       setPincode('')
       setDate('')
       setTime('')
+      setPhone('')
       setBookedSlots([])
 
     } catch (err: any) {
@@ -143,6 +156,29 @@ export default function BookingForm() {
 
         <form onSubmit={handleBooking} className="space-y-5">
           
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <input 
+                type="email" required
+                value={email} onChange={(e) => setEmail(e.target.value)} 
+                className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" 
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
+                Phone Number <span className="text-red-500">*</span>
+              </label>
+              <input 
+                type="tel" required pattern="[0-9]{10}" placeholder="1234567890"
+                value={phone} onChange={(e) => setPhone(e.target.value)} 
+                className="w-full px-4 py-3 bg-[#1A3329] border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:border-[#D96B43]/50 transition-colors" 
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Site Address</label>
             <textarea 
