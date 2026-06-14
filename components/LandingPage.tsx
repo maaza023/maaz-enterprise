@@ -60,10 +60,11 @@ export default function LandingPage() {
 
       console.log('Diagnostic: Sending payload to leads table:', JSON.stringify(payload, null, 2));
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('leads')
-        .insert([payload])
-        .select();
+        .insert([
+          { name: name, email: email, message: message, phone: phone }
+        ]);
 
       if (error) {
         console.error('Diagnostic: Supabase query returned an error:', JSON.stringify(error, null, 2));
@@ -75,7 +76,7 @@ export default function LandingPage() {
         });
         toast.error(`Submission failed: ${error.message}`);
       } else {
-        console.log('Diagnostic: Insert succeeded:', JSON.stringify(data, null, 2));
+        console.log('Diagnostic: Insert succeeded!');
         setIsSent(true);
         toast.success('Message sent successfully! We will get back to you soon.');
         setPhone('');
